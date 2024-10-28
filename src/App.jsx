@@ -3,8 +3,8 @@ import { createEvent, supabase } from './supabaseClient';
 import { Auth } from '@supabase/auth-ui-solid';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { SolidMarkdown } from 'solid-markdown';
-import * as pdfjsLib from 'pdfjs-dist/build/pdf';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.js?url';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -31,7 +31,7 @@ function App() {
   onMount(checkUserSignedIn);
 
   createEffect(() => {
-    const authListener = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
       if (session?.user) {
         setUser(session.user);
         setCurrentPage('homePage');
@@ -42,7 +42,7 @@ function App() {
     });
 
     return () => {
-      authListener.data.unsubscribe();
+      authListener.unsubscribe();
     };
   });
 
@@ -265,8 +265,8 @@ function App() {
                   </button>
                   <button
                     type="button"
-                    class={`flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${
-                      loading() ? 'opacity-50 cursor-not-allowed' : ''
+                    class={`flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 ${
+                      loading() ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                     }`}
                     onClick={handleGenerateJoke}
                     disabled={loading()}
@@ -299,26 +299,35 @@ function App() {
               <div class="space-y-4">
                 <button
                   onClick={handleGenerateImage}
-                  class="w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                  class={`w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 ${
+                    loading() ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
                   disabled={loading()}
                 >
-                  Generate Image
+                  <Show when={loading() && !generatedImage()}>Generating...</Show>
+                  <Show when={!loading() || generatedImage()}>Generate Image</Show>
                 </button>
                 <Show when={newJoke().setup && newJoke().punchline}>
                   <button
                     onClick={handleTextToSpeech}
-                    class="w-full px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                    class={`w-full px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-300 ease-in-out transform hover:scale-105 ${
+                      loading() ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
                     disabled={loading()}
                   >
-                    Text to Speech
+                    <Show when={loading() && !audioUrl()}>Converting...</Show>
+                    <Show when={!loading() || audioUrl()}>Text to Speech</Show>
                   </button>
                 </Show>
                 <button
                   onClick={handleMarkdownGeneration}
-                  class="w-full px-6 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                  class={`w-full px-6 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition duration-300 ease-in-out transform hover:scale-105 ${
+                    loading() ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
                   disabled={loading()}
                 >
-                  Generate Markdown
+                  <Show when={loading() && !markdownText()}>Generating...</Show>
+                  <Show when={!loading() || markdownText()}>Generate Markdown</Show>
                 </button>
                 {/* PDF Summarization Feature */}
                 <div class="mt-8">
@@ -331,13 +340,13 @@ function App() {
                   />
                   <button
                     onClick={handleSummarizePdf}
-                    class={`mt-4 w-full px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${
-                      loading() ? 'opacity-50 cursor-not-allowed' : ''
+                    class={`mt-4 w-full px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-300 ease-in-out transform hover:scale-105 ${
+                      loading() ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                     }`}
                     disabled={loading()}
                   >
-                    <Show when={loading()}>Summarizing...</Show>
-                    <Show when={!loading()}>Summarize PDF</Show>
+                    <Show when={loading() && !pdfSummary()}>Summarizing...</Show>
+                    <Show when={!loading() || pdfSummary()}>Summarize PDF</Show>
                   </button>
                 </div>
               </div>
